@@ -216,9 +216,9 @@ public:
 };
 
 // Function to perform staff login
-bool staffLogin(const vector<Staff>& staffList, string username, string password) {
+bool staffLogin(const vector<Staff>& staffList, string username) {
     for (const Staff& staff : staffList) {
-        if (staff.getUsername() == username && staff.getPassword() == password) {
+        if (staff.getUsername() == username) {
             return true; // Login successful
         }
     }
@@ -277,8 +277,6 @@ int main() {
         string username, password;
         cout << "Enter username: ";
         cin >> username;
-        cout << "Enter password: ";
-        cin >> password;
 
         // Load staff data from file
         vector<Staff> staffList;
@@ -297,7 +295,7 @@ int main() {
             return 1;
         }
 
-        if (staffLogin(staffList, username, password)) {
+        if (staffLogin(staffList, username)) {
             // Login successful
             cout << "Login successful. Welcome, " << username << "!" << endl;
             // Add staff functionalities here
