@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <vector>
 #include <map>
 
@@ -94,6 +96,29 @@ public:
     // Add more methods as needed
 };
 
+// Function to load menu items from a file
+vector<MenuItem> loadMenuFromFile(const string& filename) {
+    vector<MenuItem> menu;
+    ifstream file(filename);
+    if (file.is_open()) {
+        string line;
+        while (getline(file, line)) {
+            stringstream ss(line);
+            int id;
+            string name, desc, category;
+            double price;
+            ss >> id >> name >> price;
+            getline(ss, desc);
+            getline(ss, category);
+            menu.push_back(MenuItem(id, name, desc, price, category));
+        }
+        file.close();
+    } else {
+        cerr << "Unable to open file: " << filename << endl;
+    }
+    return menu;
+}
+
 // Customer class represents a customer in the restaurant
 class Customer {
 private:
@@ -109,75 +134,148 @@ public:
     int getCustomerId() const { return customerId; }
     string getName() const { return name; }
     string getContactInfo() const { return contactInfo; }
-};
 
-#include <iostream>
-#include <vector>
-#include <map>
+    // Method to place order
+    void placeOrder(const vector<MenuItem>& menu, Table& table) {
+        // Display categorized menu
+        map<string, vector<MenuItem>> categorizedMenu;
+        for (const MenuItem& item : menu) {
+            categorizedMenu[item.getCategory()].push_back(item);
+        }
 
-using namespace std;
+        cout << "Menu:" << endl;
+        int categoryIndex = 1;
+        for (const auto& category : categorizedMenu) {
+            cout << categoryIndex++ << ". " << category.first << endl;
+        }
 
-// Define your classes here...
-
-int main() {
-    // Create menu items
-    MenuItem burger(1, "Burger", "Delicious beef burger with cheese and veggies", 9.99, "Main Course");
-    MenuItem fries(2, "Fries", "Crispy golden fries", 3.99, "Side Dish");
-    MenuItem soda(3, "Soda", "Refreshing cola drink", 1.99, "Beverage");
-
-    // Create an order
-    Order order(1, 10); // Order ID: 1, Table Number: 10
-
-    // Display menu
-    cout << "Menu:" << endl;
-    cout << "1. Burger - $9.99" << endl;
-    cout << "2. Fries - $3.99" << endl;
-    cout << "3. Soda - $1.99" << endl;
-
-    // Place order from keyboard input
-    int choice;
-    int quantity;
-    char continueChoice;
-    do {
-        cout << "Enter item number: ";
+        int choice;
+        cout << "Enter your choice: ";
         cin >> choice;
 
-        cout << "Enter quantity: ";
-        cin >> quantity;
+        if (choice < 1 || choice > categorizedMenu.size()) {
+            cout << "Invalid choice!" << endl;
+            return;
+        }
+
+        // Get the selected category
+        auto it = categorizedMenu.begin();
+        advance(it, choice - 1);
+        string selectedCategory = it->first;
+
+        // Display items in selected category
+        cout << selectedCategory << " Items:" << endl;
+        const vector<MenuItem>& selectedCategoryMenu = categorizedMenu[selectedCategory];
+        for (const MenuItem& item : selectedCategoryMenu) {
+            cout << item.getItemId() << ". " << item.getName() << " - $" << item.getPrice() << endl;
+        }
+
+        // Create an order
+        Order order(table.getTableNumber(), table.getTableNumber()); // Order ID same as table number
+
+        // Place order from keyboard input
+        char continueChoice;
+        do {
+            cout << "Enter item number: ";
+            cin >> choice;
+
+            if (choice < 1 || choice > selectedCategoryMenu.size()) {
+                cout << "Invalid item choice!" << endl;
+                continue;
+            }
+
+            const MenuItem& selectedItem = selectedCategoryMenu[choice - 1];
+            int quantity;
+            cout << "Enter quantity: ";
+            cin >> quantity;
+            order.addOrderItem(OrderItem(&selectedItem, quantity, ""));
+
+            cout << "Do you want to continue? (Y/N): ";
+            cin >> continueChoice;
+        } while (continueChoice == 'Y' || continueChoice == 'y');
+
+        // Add the order to the table
+        table.addOrder(order);
+
+        // Display order details
+        cout << "Order placed successfully!" << endl;
+    }
+};
+
+// Staff class represents a staff member in the restaurant
+class Staff {
+private:
+    string username;
+    string password;
+
+public:
+    Staff(string uname, string pwd) : username(uname), password(pwd) {}
+
+    // Accessors
+    string getUsername() const { return username; }
+    string getPassword() const { return password; }
+};
+
+// Function to perform staff login
+bool staffLogin(const vector<Staff>& staffList, string username, string password) {
+    for (const Staff& staff : staffList) {
+        if (staff.getUsername() == username && staff.getPassword() == password) {
+            return true; // Login successful
+        }
+    }
+    return false; // Login failed
+}
+
+int main() {
+    // Load menu items from files
+    vector<MenuItem> appetizers = loadMenuFromFile("C:/Users/jemna/CLionProjects/Restaurant_management_system/appetizers.txt");
+    vector<MenuItem> mainCourse = loadMenuFromFile("C:/Users/jemna/CLionProjects/Restaurant_management_system/main_course.txt");
+    vector<MenuItem> desserts = loadMenuFromFile("C:/Users/jemna/CLionProjects/Restaurant_management_system/desserts.txt");
+    vector<MenuItem> drinks = loadMenuFromFile("C:/Users/jemna/CLionProjects/Restaurant_management_system/drinks.txt");
+
+    // Create a table
+    Table table(1); // Assuming table number is 1
+
+    int choice;
+    cout << "Welcome to the Restaurant Management System!" << endl;
+    cout << "1. Customer" << endl;
+    cout << "2. Staff" << endl;
+    cout << "Enter your choice: ";
+    cin >> choice;
+
+    if (choice == 1) {
+        // Customer functionality
+        Customer customer(1, "John Doe", "123-456-7890");
+
+        cout << "Menu Categories:" << endl;
+        cout << "1. Appetizers" << endl;
+        cout << "2. Main Course" << endl;
+        cout << "3. Desserts" << endl;
+        cout << "4. Drinks" << endl;
+
+        cout << "Enter your choice: ";
+        cin >> choice;
 
         switch (choice) {
             case 1:
-                order.addOrderItem(OrderItem(&burger, quantity, ""));
+                customer.placeOrder(appetizers, table);
                 break;
             case 2:
-                order.addOrderItem(OrderItem(&fries, quantity, ""));
+                customer.placeOrder(mainCourse, table);
                 break;
             case 3:
-                order.addOrderItem(OrderItem(&soda, quantity, ""));
+                customer.placeOrder(desserts, table);
+                break;
+            case 4:
+                customer.placeOrder(drinks, table);
                 break;
             default:
                 cout << "Invalid choice!" << endl;
+                break;
         }
-
-        cout << "Do you want to continue? (Y/N): ";
-        cin >> continueChoice;
-    } while (continueChoice == 'Y' || continueChoice == 'y');
-
-    // Display order details
-    cout << "Order ID: " << order.getOrderId() << endl;
-    cout << "Table Number: " << order.getTableNumber() << endl;
-    cout << "Total Price: $" << order.getTotalPrice() << endl;
-    cout << "Status: " << order.getStatus() << endl;
-
-    // Display order items
-    cout << "Order Items:" << endl;
-    for (const OrderItem& item : order.getOrderItems()) {
-        const MenuItem* menuItem = item.getMenuItem();
-        cout << " - " << menuItem->getName() << " (Qty: " << item.getQuantity() << ")" << endl;
     }
 
 
     return 0;
 }
-
 
