@@ -75,7 +75,6 @@ public:
     }
 };
 
-
 // Table class represents a table in the restaurant
 class Table {
 private:
@@ -143,7 +142,7 @@ public:
             categorizedMenu[item.getCategory()].push_back(item);
         }
 
-        cout << "Menu:" << endl;
+        cout << "Menu Categories:" << endl;
         int categoryIndex = 1;
         for (const auto& category : categorizedMenu) {
             cout << categoryIndex++ << ". " << category.first << endl;
@@ -273,8 +272,41 @@ int main() {
                 cout << "Invalid choice!" << endl;
                 break;
         }
-    }
+    } else if (choice == 2) {
+        // Staff functionality
+        string username, password;
+        cout << "Enter username: ";
+        cin >> username;
+        cout << "Enter password: ";
+        cin >> password;
 
+        // Load staff data from file
+        vector<Staff> staffList;
+        ifstream staffFile("C:/Users/jemna/CLionProjects/Restaurant_management_system/staff.txt");
+        if (staffFile.is_open()) {
+            string line;
+            while (getline(staffFile, line)) {
+                stringstream ss(line);
+                string uname, pwd;
+                ss >> uname >> pwd;
+                staffList.push_back(Staff(uname, pwd));
+            }
+            staffFile.close();
+        } else {
+            cerr << "Unable to open staff file!" << endl;
+            return 1;
+        }
+
+        if (staffLogin(staffList, username, password)) {
+            // Login successful
+            cout << "Login successful. Welcome, " << username << "!" << endl;
+            // Add staff functionalities here
+        } else {
+            cout << "Login failed. Invalid username or password." << endl;
+        }
+    } else {
+        cout << "Invalid choice!" << endl;
+    }
 
     return 0;
 }
