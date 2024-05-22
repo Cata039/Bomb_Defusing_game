@@ -3,6 +3,9 @@
 #include <sstream>
 #include <vector>
 #include <string.h>
+#include <sstream>
+#include <string>
+#include <stdexcept>
 
 using namespace std;
 
@@ -17,7 +20,7 @@ private:
 
 public:
     MenuItem(const string& n, double p)
-            : name(n), price(p) {}
+        : name(n), price(p) {}
 
     // Accessors
     string getName() const { return name; }
@@ -32,7 +35,7 @@ private:
 
 public:
     OrderItem(const MenuItem* item, int qty)
-            : menuItem(item), quantity(qty) {}
+        : menuItem(item), quantity(qty) {}
 
     // Accessors
     const MenuItem* getMenuItem() const { return menuItem; }
@@ -48,7 +51,7 @@ private:
 
 public:
     Order(int tableNum)
-            : tableNumber(tableNum), totalPrice(0) {}
+        : tableNumber(tableNum), totalPrice(0) {}
 
     // Accessors
     int getTableNumber() const { return tableNumber; }
@@ -69,12 +72,13 @@ void Order::saveToFile(const string& filename) const {
     if (file.is_open()) {
         for (const OrderItem& item : orderItems) {
             file << tableNumber << ","
-                 << item.getMenuItem()->getName() << ","
-                 << item.getQuantity() << ","
-                 << item.getMenuItem()->getPrice() * item.getQuantity() << endl;
+                << item.getMenuItem()->getName() << ","
+                << item.getQuantity() << ","
+                << item.getMenuItem()->getPrice() * item.getQuantity() << endl;
         }
         file.close();
-    } else {
+    }
+    else {
         cerr << "Unable to open file: " << filename << endl;
     }
 }
@@ -123,7 +127,8 @@ void displayMenuItems(const string& filename) {
             cout << "Name: " << name << ", Price: " << price << endl;
         }
         file.close();
-    } else {
+    }
+    else {
         cerr << "Unable to open file: " << filename << endl;
     }
 }
@@ -206,10 +211,11 @@ void placeOrder(int tableNumber, const string& menuFile) {
         order.addOrderItem(orderItem);
 
         // Save the order to file
-        order.saveToFile("C:\\faculta\\PP\\game\\orders.txt");
+        order.saveToFile("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\orders.txt");
 
         cout << "Order placed successfully!" << endl;
-    } else {
+    }
+    else {
         cout << "Order could not be placed. Product not available." << endl;
     }
 }
@@ -240,7 +246,7 @@ void placeOrder(int tableNumber, const string& menuFile) {
 //}
 
 bool checkUserExistence(const string& username, const string& password) {
-    ifstream file("C:\\faculta\\PP\\game\\staff.txt");
+    ifstream file("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\staff.txt");
     if (!file.is_open()) {
         cerr << "Error: Unable to open staff file" << endl;
         return false;
@@ -255,7 +261,160 @@ bool checkUserExistence(const string& username, const string& password) {
 
     return false;
 }
+bool checkUsernameExists(const string& username) {
+    ifstream file("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\staff.txt");
+    if (!file.is_open()) {
+        cerr << "Error: Unable to open staff file" << endl;
+        return false;
+    }
 
+    string stored_username, stored_password;
+    while (file >> stored_username >> stored_password) {
+        if (stored_username == username) {
+            return true;
+        }
+    }
+
+    return false;
+}
+// o a doua functie de verificare a userului care cauta doar dupa nume
+// mereu deasupra lui create!
+void create() {
+    string username, password;
+    cout << "Enter a new username: ";
+    cin >> username;
+
+    if (checkUsernameExists(username)) {
+       cout << "Error: Username already exists." << endl;
+        return;
+    }
+
+    cout << "Enter a new password: ";
+    cin >> password;
+
+    ofstream file("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\staff.txt", ios::app);  // Open in append mode
+    if (!file.is_open()) {
+        cerr << "Error: Unable to open staff file" << endl;
+        return;
+    }
+
+    file << username << " " << password << endl;
+    file.close();
+
+    cout << "Account created successfully!" << endl;
+}//important sa fie deasupra lui log in
+
+void menu() {
+    string name, price, alergen;
+    int nr;
+
+    cout << "What would you like to add:\n 1. main course\n 2. dessert\n 3. apetizers\n 4. drinks: \n";
+    cin >> nr;
+
+    if (nr > 4 || nr < 1) {
+        cout << "Error: Invalid response, try 1, 2, or 3." << endl;
+        return;
+    }
+
+    ofstream file;
+    if (nr == 1) {
+        file.open("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\main_course.txt", ios::app);
+    }
+    else if (nr == 2) {
+        file.open("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\dessert.txt", ios::app);
+    }
+    else if (nr == 3) {
+        file.open("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\apetizers.txt", ios::app);
+    }
+    else if (nr == 4) {
+        file.open("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\drinks.txt", ios::app);
+    }
+
+    if (!file.is_open()) {
+        cerr << "Error: Unable to open file" << endl;
+        return;
+    }
+
+    cout << "Enter the name of the food: ";
+    cin.ignore();  
+    getline(cin, name);
+    cout << "Enter price: ";
+    getline(cin, price);
+    cout << "Enter allergens: ";
+    getline(cin, alergen);//implementeaza sa adaugi mai multi alergeni
+
+    
+    file << endl << name << "," << price << "," << alergen;
+    file.close();
+
+    cout << "Food added successfully!" << endl;
+}
+
+//important sa fie deasupra lui log in
+
+void displayOrders(const int table, const string& filename) {
+    ifstream file(filename);
+
+    if (!file.is_open()) {
+        cerr << "Unable to open file: " << filename << endl;
+        return;
+    }
+    double s = 0;
+    string line;
+    bool tableFound = false;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string tableNumStr, itemName, itemQuantity, itemTotalPrice;
+        if (getline(ss, tableNumStr, ',') &&
+            getline(ss, itemName, ',') &&
+            getline(ss, itemQuantity, ',') &&
+            getline(ss, itemTotalPrice, ',')) {
+            try {
+                double price = stod(itemTotalPrice);
+                int tableNum = stoi(tableNumStr);
+                if (tableNum == table) {
+                    tableFound = true;
+                    cout << " Item: " << itemName << ", Quantity: " << itemQuantity << ", Price: " << itemTotalPrice << endl;
+                    s = s + price;
+                }
+            }
+            catch (const invalid_argument& e) {
+                cerr << "Error: Invalid table number format in file. Line skipped: " << line << endl;
+            }
+            catch (const out_of_range& e) {
+                cerr << "Error: Table number out of range in file. Line skipped: " << line << endl;
+            }
+        }
+        
+           
+        
+    }
+    if (s > 0)
+        cout << " Total: " << s << endl;
+
+    if (!tableFound) {
+        cout << "No orders found for table number: " << table << endl;
+    }
+}
+void displayAllOrders(const string& filename) {
+    ifstream file(filename);
+    if (file.is_open()) {
+        string line;
+        while (getline(file, line)) {
+            stringstream ss(line);
+            string table, name, quantity, price;
+            getline(ss, table, ',');
+            getline(ss, name, ',');
+            getline(ss, quantity, ',');
+            getline(ss, price, ',');
+            cout << "Table: " << table<<", Item: "<<name<<", Quantity:"<<quantity << ", Price: " << price << endl;
+        }
+        file.close();
+    }
+    else {
+        cerr << "Unable to open file: " << filename << endl;
+    }
+}
 
 void login(const string& staffFile) {
     string username;
@@ -272,38 +431,49 @@ void login(const string& staffFile) {
 
         int choice;
         do {
-            cout<<"1.Add new member to staff"<<endl;
-            cout<<"2.Add new item to Menu"<<endl;
-            cout<<"3.See Orders"<<endl;
-            cout<<"4.Exit"<<endl;
+            cout << "1.Add new member to staff" << endl;
+            cout << "2.Add new item to Menu" << endl;
+            cout << "3.See Orders by Table" << endl;
+            cout << "4.See All Orders" << endl;
+            cout << "5.Exit" << endl;
             cout << "Enter your choice: ";
             cin >> choice;
 
             switch (choice) {
-                case 1:
+            case 1:
+                create();
 
-                    cout << "Choice 1 selected" << endl;
-                    break;
-                case 2:
+                break;
+            case 2:
 
-                    cout << "Choice 2 selected" << endl;
-                    break;
-                case 3:
-
-                    cout << "Choice 3 selected" << endl;
-                    break;
-                case 4:
-                    cout << "Exiting..." << endl;
-                    break;
-                default:
-                    cout << "Invalid choice. Please try again." << endl;
-                    break;
+                menu();
+                break;
+            case 3:
+            {
+                const string filen = "C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\orders.txt";
+                int tableNumber;
+                cout << "Enter table number: ";
+                cin >> tableNumber;
+                displayOrders(tableNumber, filen);
+                break;
             }
-        } while (choice != 4);
-    } else {
+            case 4:
+                displayAllOrders("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\orders.txt");
+                break;
+            case 5:
+                cout << "Exiting..." << endl;
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+                break;
+            }
+        } while (choice != 5);
+    }
+    else {
         cout << "User not found." << endl;
     }
 }
+
 
 int main() {
     int choice;
@@ -321,84 +491,85 @@ int main() {
 
         // Create a table
         Table table(tableNumber);
-        cout << "1.See the Menu"<<endl;
-        cout << "2.See your orders"<<endl;
-        cout << "3.Ask for the Bill"<<endl;
-        cout << "4.Exit"<<endl;
-        cout << "Enter your choice"<<endl;
+        cout << "1.See the Menu" << endl;
+        cout << "2.See your orders" << endl;
+        cout << "3.Ask for the Bill" << endl;
+        cout << "4.Exit" << endl;
+        cout << "Enter your choice" << endl;
         cin >> choice;
 
-        switch(choice){
-            case 1:
-                do {
-                    cout << "Menu Categories:" << endl;
-                    cout << "1. Appetizers" << endl;
-                    cout << "2. Main Course" << endl;
-                    cout << "3. Desserts" << endl;
-                    cout << "4. Drinks" << endl;
-                    cout << "5. That's all." << endl;
+        switch (choice) {
+        case 1:
+            do {
+                cout << "Menu Categories:" << endl;
+                cout << "1. Appetizers" << endl;
+                cout << "2. Main Course" << endl;
+                cout << "3. Desserts" << endl;
+                cout << "4. Drinks" << endl;
+                cout << "5. That's all." << endl;
 
-                    cout << "Enter your choice: ";
-                    cin >> choice;
+                cout << "Enter your choice: ";
+                cin >> choice;
 
-                    switch (choice) {
-                        case 1:
-                            displayMenuItems("C:\\faculta\\PP\\game\\appetizers.txt");
-                            cout << "Do you want to order something from Appetizers? (Y/N): ";
-                            char order_choice1;
-                            cin >> order_choice1;
-                            if (order_choice1 == 'Y' || order_choice1 == 'y') {
-                                placeOrder(tableNumber, "C:\\faculta\\PP\\game\\appetizers.txt");
-                            }
-                            break;
-                        case 2:
-                            displayMenuItems("C:\\faculta\\PP\\game\\main_course.txt");
-                            cout << "Do you want to order something from Main Course? (Y/N): ";
-                            char order_choice2;
-                            cin >> order_choice2;
-                            if (order_choice2 == 'Y' || order_choice2 == 'y') {
-                                placeOrder(tableNumber, "C:\\faculta\\PP\\game\\main_course.txt");
-                            }
-                            break;
-                        case 3:
-                            displayMenuItems("C:\\faculta\\PP\\game\\dessert.txt");
-                            cout << "Do you want to order something from Desserts? (Y/N): ";
-                            char order_choice3;
-                            cin >> order_choice3;
-                            if (order_choice3 == 'Y' || order_choice3 == 'y') {
-                                placeOrder(tableNumber, "C:\\faculta\\PP\\game\\dessert.txt");
-                            }
-                            break;
-                        case 4:
-                            displayMenuItems("C:\\faculta\\PP\\game\\drinks.txt");
-                            cout << "Do you want to order something from Drinks? (Y/N): ";
-                            char order_choice4;
-                            cin >> order_choice4;
-                            if (order_choice4 == 'Y' || order_choice4 == 'y') {
-                                placeOrder(tableNumber, "C:\\faculta\\PP\\game\\drinks.txt");
-                            }
-                            break;
-                        case 5:
-                            cout << "Exiting..." << endl;
-                            break;
-                        default:
-                            cout << "Invalid choice!" << endl;
-                            break;
+                switch (choice) {
+                case 1:
+                    displayMenuItems("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\appetizers.txt");
+                    cout << "Do you want to order something from Appetizers? (Y/N): ";
+                    char order_choice1;
+                    cin >> order_choice1;
+                    if (order_choice1 == 'Y' || order_choice1 == 'y') {
+                        placeOrder(tableNumber, "C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\appetizers.txt");
                     }
-                } while (choice != 5);
-                break;
+                    break;
+                case 2:
+                    displayMenuItems("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\main_course.txt");
+                    cout << "Do you want to order something from Main Course? (Y/N): ";
+                    char order_choice2;
+                    cin >> order_choice2;
+                    if (order_choice2 == 'Y' || order_choice2 == 'y') {
+                        placeOrder(tableNumber, "C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\main_course.txt");
+                    }
+                    break;
+                case 3:
+                    displayMenuItems("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\dessert.txt");
+                    cout << "Do you want to order something from Desserts? (Y/N): ";
+                    char order_choice3;
+                    cin >> order_choice3;
+                    if (order_choice3 == 'Y' || order_choice3 == 'y') {
+                        placeOrder(tableNumber, "C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\dessert.txt");
+                    }
+                    break;
+                case 4:
+                    displayMenuItems("C:\\faculta\\PP\\game\\drinks.txt");
+                    cout << "Do you want to order something from Drinks? (Y/N): ";
+                    char order_choice4;
+                    cin >> order_choice4;
+                    if (order_choice4 == 'Y' || order_choice4 == 'y') {
+                        placeOrder(tableNumber, "C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\drinks.txt");
+                    }
+                    break;
+                case 5:
+                    cout << "Exiting..." << endl;
+                    break;
+                default:
+                    cout << "Invalid choice!" << endl;
+                    break;
+                }
+            } while (choice != 5);
+            break;
 
-            case 2:
-                cout<<"see your orders"<<endl;
-                break;
-            case 3:
-                cout<<"the bill"<<endl;
-                break;
+        case 2:
+            cout << "see your orders" << endl;
+            break;
+        case 3:
+            cout << "the bill" << endl;
+            break;
         }
 
 
-    } else if (choice == 2) {
-       login("C:\\faculta\\PP\\game\\staff.txt");
+    }
+    else if (choice == 2) {
+        login("C:\\Users\\-\\Desktop\\restaurant pnm\\Restaurant_management_system-main\\staff.txt");
     }
 
     return 0;
