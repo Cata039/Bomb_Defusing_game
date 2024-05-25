@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <iomanip>
 
 using namespace std;
 
@@ -293,7 +294,7 @@ void menu() {
 
     ofstream file;
     if (nr == 1) {
-        file.open("C:/Users/jemna/CLionProjects/Restaurant_management_system/main.cpp", ios::app);
+        file.open("C:/Users/jemna/CLionProjects/Restaurant_management_system/main_course.txt", ios::app);
     }
     else if (nr == 2) {
         file.open("C:/Users/jemna/CLionProjects/Restaurant_management_system/dessert.txt", ios::app);
@@ -325,21 +326,23 @@ void menu() {
     cout << "Food added successfully!" << endl;
 }
 
-//important sa fie deasupra lui log in
-
-void displayOrders(const int table, const string& filename) {
+//disply items of an order per table
+double displayOrderItems(const int table, const string& filename) {
     ifstream file(filename);
 
     if (!file.is_open()) {
         cerr << "Unable to open file: " << filename << endl;
-        return;
+        return 0.0; // Return 0 if file cannot be opened
     }
-    double s = 0;
+
+    double total = 0.0; // Initialize total
     string line;
     bool tableFound = false;
+
     while (getline(file, line)) {
         stringstream ss(line);
         string tableNumStr, itemName, itemQuantity, itemTotalPrice;
+
         if (getline(ss, tableNumStr, ',') &&
             getline(ss, itemName, ',') &&
             getline(ss, itemQuantity, ',') &&
@@ -347,10 +350,11 @@ void displayOrders(const int table, const string& filename) {
             try {
                 double price = stod(itemTotalPrice);
                 int tableNum = stoi(tableNumStr);
+
                 if (tableNum == table) {
                     tableFound = true;
                     cout << " Item: " << itemName << ", Quantity: " << itemQuantity << ", Price: " << itemTotalPrice << endl;
-                    s = s + price;
+                    total += price; // Add price to total
                 }
             }
             catch (const invalid_argument& e) {
@@ -359,18 +363,15 @@ void displayOrders(const int table, const string& filename) {
             catch (const out_of_range& e) {
                 cerr << "Error: Table number out of range in file. Line skipped: " << line << endl;
             }
-        }
-
-
-
+            }
     }
-    if (s > 0)
-        cout << " Total: " << s << endl;
 
-    if (!tableFound) {
-        cout << "No orders found for table number: " << table << endl;
-    }
+    if (tableFound)
+        cout << " Total: " << total << endl; // Print total if orders found
+
+    return total; // Return total
 }
+
 void displayAllOrders(const string& filename) {
     ifstream file(filename);
     if (file.is_open()) {
@@ -388,6 +389,101 @@ void displayAllOrders(const string& filename) {
     }
     else {
         cerr << "Unable to open file: " << filename << endl;
+    }
+}
+
+//function to remove items from the order file for a specific table
+void removeItems(const int table, const string& filename) {
+    ifstream inFile(filename);
+    ofstream outFile("temp.txt"); // Temporary file to write updated orders
+
+    if (!inFile.is_open() || !outFile.is_open()) {
+        cerr << "Unable to open files: " << filename << " or temp.txt" << endl;
+        return;
+    }
+
+    string line;
+    bool tableFound = false;
+
+    // Copy orders to temp file, excluding orders for the specified table
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        string tableNumStr;
+
+        if (getline(ss, tableNumStr, ',')) {
+            try {
+                int tableNum = stoi(tableNumStr);
+
+                if (tableNum != table) {
+                    outFile << line << endl; // Write line to temp file
+                } else {
+                    tableFound = true;
+                }
+            } catch (const invalid_argument& e) {
+                cerr << "Error: Invalid table number format in file. Line skipped: " << line << endl;
+            } catch (const out_of_range& e) {
+                cerr << "Error: Table number out of range in file. Line skipped: " << line << endl;
+            }
+        }
+    }
+
+    inFile.close();
+    outFile.close();
+
+    // Replace original file with temp file
+    remove(filename.c_str());
+    rename("temp.txt", filename.c_str());
+
+    if (!tableFound) {
+        cout << "No orders found for table number: " << table << endl;
+    }
+}
+
+// Function to calculate bill with tip and handle payment
+void calculateBill(const int table, const string& filename) {
+    // Display items and total
+    double total = displayOrderItems(table, filename);
+
+    // Ask for tip percentage
+    cout << "Choose tip percentage:" << endl;
+    cout << "1. 5%" << endl;
+    cout << "2. 10%" << endl;
+    cout << "3. 15%" << endl;
+    cout<<"Enter your choice: ";
+    int tipChoice;
+    cin >> tipChoice;
+
+    double tipPercentage;
+    switch (tipChoice) {
+    case 1:
+        tipPercentage = 0.05;
+        break;
+    case 2:
+        tipPercentage = 0.10;
+        break;
+    case 3:
+        tipPercentage = 0.15;
+        break;
+    default:
+        cout << "Invalid tip choice. Defaulting to 0% tip." << endl;
+        tipPercentage = 0.0;
+        break;
+    }
+
+    // Calculate new total including tip
+    double newTotal = total * (1 + tipPercentage);
+    cout << "New Total (including " << tipPercentage << "% tip): " << fixed << setprecision(2) << newTotal << endl;
+
+    // Ask if customer wants to pay
+    cout << "Do you want to pay? (Y/N): ";
+    char payChoice;
+    cin >> payChoice;
+    if (payChoice == 'Y' || payChoice == 'y') {
+        // Remove items from the order file
+        removeItems(table, filename);
+        cout << "Payment successful." << endl;
+    } else {
+        cout << "Payment canceled." << endl;
     }
 }
 
@@ -429,7 +525,7 @@ void login(const string& staffFile) {
                 int tableNumber;
                 cout << "Enter table number: ";
                 cin >> tableNumber;
-                displayOrders(tableNumber, filen);
+                displayOrderItems(tableNumber, filen);
                 break;
             }
             case 4:
@@ -464,86 +560,107 @@ int main() {
         cin >> tableNumber;
         cout << endl;
 
-        // Create a table
-        Table table(tableNumber);
-        cout << "1.See the Menu" << endl;
-        cout << "2.See your orders" << endl;
-        cout << "3.Ask for the Bill" << endl;
-        cout << "4.Exit" << endl;
-        cout << "Enter your choice" << endl;
-        cin >> choice;
+        do {
+            cout << "1. See the Menu" << endl;
+            cout << "2. See your order" << endl;
+            cout << "3. Ask for the Bill" << endl;
+            cout << "4. Exit" << endl;
+            cout << "Enter your choice: ";
+            cin >> choice;
 
-        switch (choice) {
-        case 1:
-            do {
-                cout << "Menu Categories:" << endl;
-                cout << "1. Appetizers" << endl;
-                cout << "2. Main Course" << endl;
-                cout << "3. Desserts" << endl;
-                cout << "4. Drinks" << endl;
-                cout << "5. That's all." << endl;
+            switch (choice) {
+                case 1: {
+                    int innerChoice;
+                    do {
+                        cout << "Menu Categories:" << endl;
+                        cout << "1. Appetizers" << endl;
+                        cout << "2. Main Course" << endl;
+                        cout << "3. Desserts" << endl;
+                        cout << "4. Drinks" << endl;
+                        cout << "5. That's all." << endl;
+                        cout << "Enter your choice: ";
+                        cin >> innerChoice;
 
-                cout << "Enter your choice: ";
-                cin >> choice;
-
-                switch (choice) {
-                case 1:
-                    displayMenuItems("C:/Users/jemna/CLionProjects/Restaurant_management_system/appetisers.txt");
-                    cout << "Do you want to order something from Appetizers? (Y/N): ";
-                    char order_choice1;
-                    cin >> order_choice1;
-                    if (order_choice1 == 'Y' || order_choice1 == 'y') {
-                        placeOrder(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/appetisers.txt");
+                        switch (innerChoice) {
+                            case 1:
+                                displayMenuItems("C:/Users/jemna/CLionProjects/Restaurant_management_system/appetisers.txt");
+                                cout << "Do you want to order something from Appetizers? (Y/N): ";
+                                char order_choice1;
+                                cin >> order_choice1;
+                                if (order_choice1 == 'Y' || order_choice1 == 'y') {
+                                    placeOrder(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/appetisers.txt");
+                                }
+                                break;
+                            case 2:
+                                displayMenuItems("C:/Users/jemna/CLionProjects/Restaurant_management_system/main_course.txt");
+                                cout << "Do you want to order something from Main Course? (Y/N): ";
+                                char order_choice2;
+                                cin >> order_choice2;
+                                if (order_choice2 == 'Y' || order_choice2 == 'y') {
+                                    placeOrder(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/main_course.txt");
+                                }
+                                break;
+                            case 3:
+                                displayMenuItems("C:/Users/jemna/CLionProjects/Restaurant_management_system/dessert.txt");
+                                cout << "Do you want to order something from Desserts? (Y/N): ";
+                                char order_choice3;
+                                cin >> order_choice3;
+                                if (order_choice3 == 'Y' || order_choice3 == 'y') {
+                                    placeOrder(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/dessert.txt");
+                                }
+                                break;
+                            case 4:
+                                displayMenuItems("C:/Users/jemna/CLionProjects/Restaurant_management_system/drinks.txt");
+                                cout << "Do you want to order something from Drinks? (Y/N): ";
+                                char order_choice4;
+                                cin >> order_choice4;
+                                if (order_choice4 == 'Y' || order_choice4 == 'y') {
+                                    placeOrder(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/drinks.txt");
+                                }
+                                break;
+                            case 5:
+                                cout << "Exiting..." << endl;
+                                break;
+                            default:
+                                cout << "Invalid choice!" << endl;
+                                break;
+                        }
+                    } while (innerChoice != 5);
+                    break;
+                }
+                case 2: {
+                    // See the order
+                    displayOrderItems(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/orders.txt");
+                    cout << "1. Go back" << endl;
+                    cout << "2. Exit" << endl;
+                    cout << "Enter your choice: ";
+                    cin >> choice;
+                    if (choice == 1) {
+                        // Go back to the main menu
+                    } else if (choice == 2) {
+                        cout << "Exiting..." << endl;
+                        exit(0);
+                    } else {
+                        cout << "Invalid choice!" << endl;
                     }
                     break;
-                case 2:
-                    displayMenuItems("C:/Users/jemna/CLionProjects/Restaurant_management_system/main.cpp");
-                    cout << "Do you want to order something from Main Course? (Y/N): ";
-                    char order_choice2;
-                    cin >> order_choice2;
-                    if (order_choice2 == 'Y' || order_choice2 == 'y') {
-                        placeOrder(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/main.cpp");
-                    }
-                    break;
+                }
                 case 3:
-                    displayMenuItems("C:/Users/jemna/CLionProjects/Restaurant_management_system/dessert.txt");
-                    cout << "Do you want to order something from Desserts? (Y/N): ";
-                    char order_choice3;
-                    cin >> order_choice3;
-                    if (order_choice3 == 'Y' || order_choice3 == 'y') {
-                        placeOrder(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/dessert.txt");
-                    }
+                    // Call function to display items and calculate total bill
+                    calculateBill(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/orders.txt");
+                    removeItems(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/orders.txt");
                     break;
                 case 4:
-                    displayMenuItems("C:/Users/jemna/CLionProjects/Restaurant_management_system/drinks.txt");
-                    cout << "Do you want to order something from Drinks? (Y/N): ";
-                    char order_choice4;
-                    cin >> order_choice4;
-                    if (order_choice4 == 'Y' || order_choice4 == 'y') {
-                        placeOrder(tableNumber, "C:/Users/jemna/CLionProjects/Restaurant_management_system/drinks.txt");
-                    }
-                    break;
-                case 5:
                     cout << "Exiting..." << endl;
+                    exit(0);
                     break;
                 default:
                     cout << "Invalid choice!" << endl;
                     break;
-                }
-            } while (choice != 5);
-            break;
+            }
+        } while (choice != 4);
 
-        case 2:
-            cout << "see your orders" << endl;
-            break;
-        case 3:
-            cout << "the bill" << endl;
-            break;
-        }
-
-
-    }
-    else if (choice == 2) {
+    } else if (choice == 2) {
         login("C:/Users/jemna/CLionProjects/Restaurant_management_system/staff.txt");
     }
 
