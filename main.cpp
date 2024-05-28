@@ -2,13 +2,17 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <string.h>
+#include <string>
 #include <iomanip>
 
 using namespace std;
 
 #define MAX_LINE_LENGTH 500
 #define MAX_NAME_LENGTH 500
+
+bool isLoggedIn = false; // Track whether a staff member is logged in
+
+const string basePath = "C:/Users/jemna/CLionProjects/Restaurant_management_system/";
 
 // MenuItem class represents a menu item in the restaurant
 class MenuItem {
@@ -38,6 +42,9 @@ public:
     // Accessors
     const MenuItem* getMenuItem() const { return menuItem; }
     int getQuantity() const { return quantity; }
+    string getProductName() const { return menuItem->getName(); }
+    double getProductPrice() const { return menuItem->getPrice(); }
+
 };
 
 // Order class represents an order placed by a customer
@@ -56,29 +63,37 @@ public:
     double getTotalPrice() const { return totalPrice; }
 
     // Methods
-    void addOrderItem(const OrderItem& item);
-    void saveToFile(const string& filename) const;
-};
-
-void Order::addOrderItem(const OrderItem& item) {
-    orderItems.push_back(item);
-    totalPrice += item.getMenuItem()->getPrice() * item.getQuantity();
-}
-
-void Order::saveToFile(const string& filename) const {
-    ofstream file(filename, ios::app);
-    if (file.is_open()) {
-        for (const OrderItem& item : orderItems) {
-            file << tableNumber << ","
-                 << item.getMenuItem()->getName() << ","
-                 << item.getQuantity() << ","
-                 << item.getMenuItem()->getPrice() * item.getQuantity() << endl;
+    string toString() const {
+        stringstream ss;
+        ss << "Table Number: " << tableNumber << "\n";
+        for (const auto& item : orderItems) {
+            ss << "Product: " << item.getProductName() << ", Quantity: " << item.getQuantity()
+               << ", Price: $" << item.getProductPrice() << "\n";
         }
-        file.close();
-    } else {
-        cerr << "Unable to open file: " << filename << endl;
+        return ss.str();
     }
-}
+
+    void addOrderItem(const OrderItem& item) {
+        orderItems.push_back(item);
+        totalPrice += item.getMenuItem()->getPrice() * item.getQuantity();
+    }
+
+    void saveToFile(const string& filename) const
+    {
+        ofstream file(filename, ios::app);
+        if (file.is_open()) {
+            for (const OrderItem& item : orderItems) {
+                file << tableNumber << ","
+                     << item.getMenuItem()->getName() << ","
+                     << item.getQuantity() << ","
+                     << item.getMenuItem()->getPrice() * item.getQuantity() << endl;
+            }
+            file.close();
+        } else {
+            cerr << "Unable to open file: " << filename << endl;
+        }
+    }
+};
 
 // Table class represents a table in the restaurant
 class Table {
@@ -128,6 +143,7 @@ void displayMenuItems(const string& filename) {
         cerr << "Unable to open file: " << filename << endl;
     }
 }
+
 
 //EU
 double getProductPrice(const string& filename, const string& product_name) {
@@ -207,7 +223,9 @@ void placeOrder(int tableNumber, const string& menuFile) {
         order.addOrderItem(orderItem);
 
         // Save the order to file
-        order.saveToFile("C:\\faculta\\PP\\game\\orders.txt");
+        order.saveToFile(basePath + "orders.txt");
+
+
 
         cout << "Order placed successfully!" << endl;
     } else {
@@ -215,34 +233,9 @@ void placeOrder(int tableNumber, const string& menuFile) {
     }
 }
 
-
-//int checkUserExistence(const char *name, const char *surname) {
-//    FILE *file = fopen("C:\\faculta\\PP\\online_shop_2\\clients.csv", "r");
-//    if (file == NULL) {
-//        printf("Error: Unable to open the file.\n");
-//        return 0;
-//    }
-//
-//    char line[MAX_NAME_LENGTH + 2]; //+2 for comma and newline
-//    while (fgets(line, sizeof(line), file)) {
-//        char *token = strtok(line, ",");
-//        if (strcmp(token, name) == 0) {
-//            token = strtok(NULL, ",");
-//            token[strcspn(token, "\n")] = '\0';
-//            if (strcmp(token, surname) == 0) {
-//                fclose(file);
-//                return 1;
-//            }
-//        }
-//    }
-//
-//    fclose(file);
-//    return 0;
-//}
-
 //EU
 bool checkUserExistence(const string& username, const string& password) {
-    ifstream file("C:\\faculta\\PP\\game\\staff.txt");
+    ifstream file(basePath + "staff.txt");
     if (!file.is_open()) {
         cerr << "Error: Unable to open staff file" << endl;
         return false;
@@ -260,7 +253,7 @@ bool checkUserExistence(const string& username, const string& password) {
 
 //HELGA
 bool checkUsernameExists(const string& username) {
-    ifstream file("C:\\faculta\\PP\\game\\staff.txt");
+    ifstream file(basePath + "staff.txt");
     if (!file.is_open()) {
         cerr << "Error: Unable to open staff file" << endl;
         return false;
@@ -290,7 +283,7 @@ void create() {
     cout << "Enter a new password: ";
     cin >> password;
 
-    ofstream file("C:\\faculta\\PP\\game\\staff.txt", ios::app);  // Open in append mode
+    ofstream file(basePath + "staff.txt", ios::app);  // Open in append mode
     if (!file.is_open()) {
         cerr << "Error: Unable to open staff file" << endl;
         return;
@@ -317,16 +310,16 @@ void menu() {
 
     ofstream file;
     if (nr == 1) {
-        file.open("C:\\faculta\\PP\\game\\main_course.txt", ios::app);
+        file.open(basePath +"main_course.txt", ios::app);
     }
     else if (nr == 2) {
-        file.open("C:\\faculta\\PP\\game\\dessert.txt", ios::app);
+        file.open(basePath +"dessert.txt", ios::app);
     }
     else if (nr == 3) {
-        file.open("C:\\faculta\\PP\\game\\apetizers.txt", ios::app);
+        file.open(basePath +"appetizers.txt", ios::app);
     }
     else if (nr == 4) {
-        file.open("C:\\faculta\\PP\\game\\drinks.txt", ios::app);
+        file.open(basePath +"drinks.txt", ios::app);
     }
 
     if (!file.is_open()) {
@@ -347,6 +340,79 @@ void menu() {
     file.close();
 
     cout << "Food added successfully!" << endl;
+}
+
+//CATA
+void deleteItemMenu() {
+    string itemName;
+    int nr;
+
+    cout << "Which category does the item belong to:\n 1. Main course\n 2. Dessert\n 3. Appetizers\n 4. Drinks\n";
+    cin >> nr;
+
+    if (nr > 4 || nr < 1) {
+        cout << "Error: Invalid response, try 1, 2, 3, or 4." << endl;
+        return;
+    }
+
+    string filename;
+    if (nr == 1) {
+        filename = basePath + "main_course.txt";
+    } else if (nr == 2) {
+        filename = basePath + "dessert.txt";
+    } else if (nr == 3) {
+        filename = basePath + "appetizers.txt";
+    } else if (nr == 4) {
+        filename = basePath + "drinks.txt";
+    }
+
+    cout << "Enter the name of the item to delete: ";
+    cin.ignore(); // Ignore the newline character left in the input buffer
+    getline(cin, itemName);
+
+    // Open the file for reading and writing
+    fstream file(filename, ios::in | ios::out);
+
+    if (!file.is_open()) {
+        cerr << "Error: Unable to open file" << endl;
+        return;
+    }
+
+    bool itemFound = false;
+    string line;
+    ofstream temp("temp.txt"); // Temporary file to store non-deleted items
+
+    // Read each line from the file
+    while (getline(file, line)) {
+        // Split the line into name, price, and allergen
+        stringstream ss(line);
+        string name;
+        getline(ss, name, ',');
+        // Trim leading and trailing whitespaces from name
+        name.erase(0, name.find_first_not_of(" \t\n\r\f\v"));
+        name.erase(name.find_last_not_of(" \t\n\r\f\v") + 1);
+
+        // If the item matches, don't write it to the temporary file
+        if (name == itemName) {
+            itemFound = true;
+        } else {
+            temp << line << endl;
+        }
+    }
+
+    file.close();
+    temp.close();
+
+    // Remove the original file
+    remove(filename.c_str());
+    // Rename the temporary file to the original filename
+    rename("temp.txt", filename.c_str());
+
+    if (itemFound) {
+        cout << "Item '" << itemName << "' deleted successfully from the menu." << endl;
+    } else {
+        cout << "Item '" << itemName << "' not found in the menu." << endl;
+    }
 }
 
 //HELGA
@@ -416,67 +482,152 @@ void displayAllOrders(const string& filename) {
     }
 }
 
+//CATA
+// Function to confirm username and password
+bool confirmUsernameAndPassword(const string& username, const string& password) {
+    // Read username and password from tmp_shift.txt
+    ifstream infile("tmp_shift.txt");
+    string storedUsername, storedPassword;
+    if (infile.is_open()) {
+        infile >> storedUsername >> storedPassword;
+        infile.close();
+        // Check if entered username and password match
+        return (username == storedUsername && password == storedPassword);
+    }
+    return false;
+}
+
+//CATA
+void seeDailyReport() {
+    // Function to see daily report
+    const string dailyReportFile = basePath +"daily_report.txt";
+    ifstream report(dailyReportFile);
+    if (report.is_open()) {
+        string line;
+        while (getline(report, line)) {
+            cout << line << endl;
+        }
+        report.close();
+    } else {
+        cout << "Unable to open the daily report file." << endl;
+    }
+}
+
+
 //EU
-void login(const string& staffFile) {
+void login(const string& staffFile)
+{
     string username;
     string password;
 
-    cout << "Enter your username: ";
-    cin >> username;
-    cout << "Enter your password: ";
-    cin >> password;
+    if (!isLoggedIn)
+    {
+        string username;
+        string password;
 
-    if (checkUserExistence(username, password)) {
-        Staff staff(username, password);
-        cout << "Welcome, " << staff.getUsername() << "!" << endl;
+        cout << "You must be logged in to access the customer section." << endl;
+        cout << "Enter your username: ";
+        cin >> username;
+        cout << "Enter your password: ";
+        cin >> password;
 
-        int choice;
-        do {
-            cout << "1.Add new member to staff" << endl;
-            cout << "2.Add new item to Menu" << endl;
-            cout << "3.See Orders by Table" << endl;
-            cout << "4.See All Orders" << endl;
-            cout << "5.Exit" << endl;
-            cout << "Enter your choice: ";
-            cin >> choice;
+        if (checkUserExistence(username, password))
+        {
+            isLoggedIn = true;
+            cout << "Login successful!" << endl;
+            // Create and open the temporary file
+            ofstream tmpFile("tmp_shift.txt");
+            if (tmpFile.is_open())
+            {
+                // Write the username and password to the temporary file
+                tmpFile << username << " " << password << endl;
+                tmpFile.close(); // Close the file after writing
+            }
+        }
+        else
+        {
+            cout << "User not found." << endl;
+            return; // Exit the function if user not found
+        }
+    }
 
-            switch (choice) {
-                case 1:
-                    create();
+    Staff staff(username, password);
+    cout << "Welcome, " << staff.getUsername() << "!" << endl;
 
-                    break;
-                case 2:
+    int choice;
+    do {
+        cout << "1. Add new member to staff" << endl;
+        cout << "2. Add new item to Menu" << endl;
+        cout << "3. Delete item from the Menu" << endl;
+        cout << "4. See Orders by Table" << endl;
+        cout << "5. See All Orders" << endl;
+        cout << "6. Close the Shift" << endl;
+        cout << "7. Exit" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
 
-                    menu();//la alergeni tr sa punem virgula intre ei
-                    break;
-                case 3:
+        switch (choice) {
+            case 1:
+                create();
+                break;
+            case 2:
+                menu(); //la alergeni tr sa punem virgula intre ei
+                break;
+            case 3:
+                deleteItemMenu();
+                break;
+            case 4:
                 {
-                    const string filen = "C:\\faculta\\PP\\game\\orders.txt";
+                    const string filen = basePath + "orders.txt";
                     int tableNumber;
                     cout << "Enter table number: ";
                     cin >> tableNumber;
                     displayOrders(tableNumber, filen);
                     break;
                 }
-                case 4:
-                    displayAllOrders("C:\\faculta\\PP\\game\\orders.txt");
-                    break;
-                case 5:
-                    cout << "Exiting..." << endl;
-                    break;
-                default:
-                    cout << "Invalid choice. Please try again." << endl;
-                    break;
-            }
-        } while (choice != 5);
-    }
-    else {
-        cout << "User not found." << endl;
-    }
+            case 5:
+                displayAllOrders(basePath + "orders.txt");
+                break;
+
+            //CATA    am adaugat chestii aici
+            case 6:
+                // Confirm username and password
+                    int nr;
+                if (confirmUsernameAndPassword(username, password)) {
+                    cout << "1. See the daily report" << endl;
+                    cout << "2. Exit" << endl;
+                    cin >> nr;
+                    switch (nr)
+                    {
+                    case 1:
+                        {
+                            seeDailyReport();
+                            isLoggedIn = false;
+                            break;
+                        }
+                    case 2:
+                        cout << "Exiting..." << endl;
+                        break;
+                    }
+                } else {
+                    cout << "Incorrect username or password. Please try again." << endl;
+                }
+                break;
+                //
+            case 7:
+                cout << "Exiting..." << endl;
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+                break;
+        }
+    } while (choice != 7);
 }
 
+
+
 //EU
-double seeYourOrder(int tableNumber, const string& filename) {
+double seeYourOrder(int tableNumber, const string& filename){
     ifstream file(filename);
     if (!file.is_open()) {
         cerr << "Error: Unable to open file " << filename << endl;
@@ -518,52 +669,49 @@ double seeYourOrder(int tableNumber, const string& filename) {
     return totalPrice;
 }
 
-//CATA
-void removeItems(const int table, const string& filename) {
-    ifstream inFile(filename);
-    ofstream outFile("temp.txt"); // Temporary file to write updated orders
 
-    if (!inFile.is_open() || !outFile.is_open()) {
-        cerr << "Unable to open files: " << filename << " or temp.txt" << endl;
-        return;
+std::vector<Order> readOrders(const std::string& filename) {
+    std::vector<Order> orders;
+    std::ifstream file(filename);
+    std::string itemName;
+    int quantity;
+    double price;
+    bool paid;
+
+    while (file >> itemName >> quantity >> price >> paid) {
+        orders.push_back(Order{itemName, quantity, price, paid});
     }
 
-    string line;
-    bool tableFound = false;
+    return orders;
+}
 
-    // Copy orders to temp file, excluding orders for the specified table
-    while (getline(inFile, line)) {
-        stringstream ss(line);
-        string tableNumStr;
+void writeOrders(const std::string& filename, const std::vector<Order>& orders) {
+    std::ofstream file(filename);
+    for (const auto& order : orders) {
+        file << order.itemName << " " << order.quantity << " " << order.price << " " << order.paid << "\n";
+    }
+}
 
-        if (getline(ss, tableNumStr, ',')) {
-            try {
-                int tableNum = stoi(tableNumStr);
+//CATA
+void removeItems(const std::string& ordersFile, const std::string& reportFile) {
+    auto orders = readOrders(ordersFile);
+    double total = 0.0;
+    std::ofstream report(reportFile);
 
-                if (tableNum != table) {
-                    outFile << line << endl; // Write line to temp file
-                } else {
-                    tableFound = true;
-                }
-            } catch (const invalid_argument& e) {
-                cerr << "Error: Invalid table number format in file. Line skipped: " << line << endl;
-            } catch (const out_of_range& e) {
-                cerr << "Error: Table number out of range in file. Line skipped: " << line << endl;
-            }
+    std::vector<Order> unpaidOrders;
+    for (const auto& order : orders) {
+        if (order.paid) {
+            total += order.price * order.quantity;
+            report << order.itemName << " " << order.quantity << " " << order.price << " " << order.paid << "\n";
+        } else {
+            unpaidOrders.push_back(order);
         }
     }
 
-    inFile.close();
-    outFile.close();
-
-    // Replace original file with temp file
-    remove(filename.c_str());
-    rename("temp.txt", filename.c_str());
-
-    if (!tableFound) {
-        cout << "No orders found for table number: " << table << endl;
-    }
+    writeOrders(ordersFile, unpaidOrders);
+    report << "Total: " << total << "\n";
 }
+
 
 //CATA
 void calculateBill(const int table, const string& filename) {
@@ -575,30 +723,30 @@ void calculateBill(const int table, const string& filename) {
     cout << "1. 5%" << endl;
     cout << "2. 10%" << endl;
     cout << "3. 15%" << endl;
-    cout<<"Enter your choice: ";
+    cout << "Enter your choice: ";
     int tipChoice;
     cin >> tipChoice;
 
     double tipPercentage;
     switch (tipChoice) {
-        case 1:
-            tipPercentage = 0.05;
-            break;
-        case 2:
-            tipPercentage = 0.10;
-            break;
-        case 3:
-            tipPercentage = 0.15;
-            break;
-        default:
-            cout << "Invalid tip choice. Defaulting to 0% tip." << endl;
-            tipPercentage = 0.0;
-            break;
+    case 1:
+        tipPercentage = 0.05;
+        break;
+    case 2:
+        tipPercentage = 0.10;
+        break;
+    case 3:
+        tipPercentage = 0.15;
+        break;
+    default:
+        cout << "Invalid tip choice. Defaulting to 0% tip." << endl;
+        tipPercentage = 0.0;
+        break;
     }
 
     // Calculate new total including tip
     double newTotal = total * (1 + tipPercentage);
-    cout << "New Total (including " << tipPercentage << "% tip): " << fixed << setprecision(2) << newTotal << endl;
+    cout << "New Total (including " << tipPercentage * 100 << "% tip): " << fixed << setprecision(2) << newTotal << endl;
 
     // Ask if customer wants to pay
     cout << "Do you want to pay? (Y/N): ";
@@ -606,13 +754,12 @@ void calculateBill(const int table, const string& filename) {
     cin >> payChoice;
     if (payChoice == 'Y' || payChoice == 'y') {
         // Remove items from the order file
-        removeItems(table, filename);
+        removeItems(table, filename, newTotal); // Pass the new total, including the tip
         cout << "Payment successful." << endl;
     } else {
         cout << "Payment canceled." << endl;
     }
 }
-
 
 
 int main() {
@@ -625,25 +772,30 @@ int main() {
         cout << "3. Exit" << endl;
         cout << "Enter your choice: ";
         cin >> choice;
+            if (choice == 1)
+            {
+                if (!isLoggedIn) {
+                    cout << "You must be logged in to access the customer section." << endl;
+                    continue;
+                }
 
-        if (choice == 1) {
-            int tableNumber;
-            cout << "Enter the table's number: ";
-            cin >> tableNumber;
-            cout << endl;
+                int tableNumber;
+                cout << "Enter the table's number: ";
+                cin >> tableNumber;
+                cout << endl;
 
-            // Create a table
-            Table table(tableNumber);
+                // Create a table
+                Table table(tableNumber);
+                while (true) {
+                    cout << "1. See the Menu" << endl;
+                    cout << "2. See your orders" << endl;
+                    cout << "3. Ask for the Bill" << endl;
+                    cout << "4. Exit" << endl;
+                    cout << "Enter your choice: ";
+                    cin >> choice;
 
-            while (true) {
-                cout << "1. See the Menu" << endl;
-                cout << "2. See your orders" << endl;
-                cout << "3. Ask for the Bill" << endl;
-                cout << "4. Exit" << endl;
-                cout << "Enter your choice: ";
-                cin >> choice;
 
-                switch (choice) {
+                    switch (choice) {
                     case 1:
                         do {
                             cout << "Menu Categories:" << endl;
@@ -657,79 +809,82 @@ int main() {
                             cin >> choice;
 
                             switch (choice) {
-                                case 1:
-                                    displayMenuItems("C:\\faculta\\PP\\game\\appetizers.txt");
-                                    cout << "Do you want to order something from Appetizers? (Y/N): ";
-                                    char order_choice1;
-                                    cin >> order_choice1;
-                                    if (order_choice1 == 'Y' || order_choice1 == 'y') {
-                                        placeOrder(tableNumber, "C:\\faculta\\PP\\game\\appetizers.txt");
-                                    }
-                                    break;
-                                case 2:
-                                    displayMenuItems("C:\\faculta\\PP\\game\\main_course.txt");
-                                    cout << "Do you want to order something from Main Course? (Y/N): ";
-                                    char order_choice2;
-                                    cin >> order_choice2;
-                                    if (order_choice2 == 'Y' || order_choice2 == 'y') {
-                                        placeOrder(tableNumber, "C:\\faculta\\PP\\game\\main_course.txt");
-                                    }
-                                    break;
-                                case 3:
-                                    displayMenuItems("C:\\faculta\\PP\\game\\dessert.txt");
-                                    cout << "Do you want to order something from Desserts? (Y/N): ";
-                                    char order_choice3;
-                                    cin >> order_choice3;
-                                    if (order_choice3 == 'Y' || order_choice3 == 'y') {
-                                        placeOrder(tableNumber, "C:\\faculta\\PP\\game\\dessert.txt");
-                                    }
-                                    break;
-                                case 4:
-                                    displayMenuItems("C:\\faculta\\PP\\game\\drinks.txt");
-                                    cout << "Do you want to order something from Drinks? (Y/N): ";
-                                    char order_choice4;
-                                    cin >> order_choice4;
-                                    if (order_choice4 == 'Y' || order_choice4 == 'y') {
-                                        placeOrder(tableNumber, "C:\\faculta\\PP\\game\\drinks.txt");
-                                    }
-                                    break;
-                                case 5:
-                                    cout << "Returning to main menu..." << endl;
-                                    break;
-                                default:
-                                    cout << "Invalid choice!" << endl;
-                                    break;
+                            case 1:
+                                displayMenuItems(basePath + "appetisers.txt");
+                                cout << "Do you want to order something from Appetizers? (Y/N): ";
+                                char order_choice1;
+                                cin >> order_choice1;
+                                if (order_choice1 == 'Y' || order_choice1 == 'y') {
+                                    placeOrder(tableNumber, basePath + "appetisers.txt");
+                                }
+
+                                break;
+                            case 2:
+                                displayMenuItems(basePath + "main_course.txt");
+                                cout << "Do you want to order something from Main Course? (Y/N): ";
+                                char order_choice2;
+                                cin >> order_choice2;
+                                if (order_choice2 == 'Y' || order_choice2 == 'y') {
+                                    placeOrder(tableNumber, basePath + "main_course.txt");
+                                }
+
+                                break;
+                            case 3:
+                                displayMenuItems(basePath + "dessert.txt");
+                                cout << "Do you want to order something from Desserts? (Y/N): ";
+                                char order_choice3;
+                                cin >> order_choice3;
+                                if (order_choice3 == 'Y' || order_choice3 == 'y') {
+                                    placeOrder(tableNumber, basePath + "dessert.txt");
+                                }
+
+                                break;
+                            case 4:
+                                displayMenuItems(basePath + "drinks.txt");
+                                cout << "Do you want to order something from Drinks? (Y/N): ";
+                                char order_choice4;
+                                cin >> order_choice4;
+                                if (order_choice4 == 'Y' || order_choice4 == 'y') {
+                                    placeOrder(tableNumber, basePath + "drinks.txt");
+                                }
+
+                                break;
+                            case 5:
+                                cout << "Returning to main menu..." << endl;
+                                break;
+                            default:
+                                cout << "Invalid choice!" << endl;
+                                break;
                             }
                         } while (choice != 5);
                         break;
 
                     case 2:
-                        seeYourOrder(tableNumber, "C:\\faculta\\PP\\game\\orders.txt");
+                        seeYourOrder(tableNumber, basePath + "orders.txt");
+
                         break;
                     case 3:
-                        calculateBill(tableNumber, "C:\\faculta\\PP\\game\\orders.txt");
-                        //removeItems(tableNumber, "C:\\faculta\\PP\\game\\orders.txt"); ASTA NU TREBUIE ca avem dupa un bug
+                        calculateBill(tableNumber, basePath + "orders.txt");
+
                     case 4:
                         cout << "Returning to main menu..." << endl;
                         break;
                     default:
                         cout << "Invalid choice. Please try again." << endl;
                         break;
+                    }
+
+                    if (choice == 4) break; // Exit the customer menu loop
                 }
-
-                if (choice == 4) break; // Exit the customer menu loop
+            }else if (choice == 2) {
+                    cout<<"Open the Shift"<<endl;
+                    login(basePath + "staff.txt");
+                } else if (choice == 3) {
+                    cout << "Exiting the program. Goodbye!" << endl;
+                    break;
+                } else {
+                    cout << "Invalid choice. Please try again." << endl;
+                }
             }
-
-        } else if (choice == 2) {
-            login("C:\\faculta\\PP\\game\\staff.txt");
-        } else if (choice == 3) {
-            cout << "Exiting the program. Goodbye!" << endl;
-            break;
-        } else {
-            cout << "Invalid choice. Please try again." << endl;
-        }
-    }
-
     return 0;
 }
-
