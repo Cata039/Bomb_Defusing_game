@@ -4,7 +4,13 @@
 #include <vector>
 #include <string.h>
 #include <iomanip>
+#include <cstdlib>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 using namespace std;
 
 #define MAX_LINE_LENGTH 500
@@ -613,6 +619,14 @@ void calculateBill(const int table, const string& filename) {
     }
 }
 
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");
+#else
+    cout << "\033[2J\033[1;1H";
+#endif
+}
+
 
 
 int main() {
@@ -625,6 +639,8 @@ int main() {
         cout << "3. Exit" << endl;
         cout << "Enter your choice: ";
         cin >> choice;
+
+        clearScreen();  // Clear screen after user makes a choice
 
         if (choice == 1) {
             int tableNumber;
@@ -643,6 +659,8 @@ int main() {
                 cout << "Enter your choice: ";
                 cin >> choice;
 
+                clearScreen();  // Clear screen after user makes a choice
+
                 switch (choice) {
                     case 1:
                         do {
@@ -655,6 +673,8 @@ int main() {
 
                             cout << "Enter your choice: ";
                             cin >> choice;
+
+                            clearScreen();  // Clear screen after user makes a choice
 
                             switch (choice) {
                                 case 1:
@@ -700,6 +720,10 @@ int main() {
                                     cout << "Invalid choice!" << endl;
                                     break;
                             }
+
+                            if (choice != 5) {
+                                clearScreen();  // Clear screen before showing the menu categories again
+                            }
                         } while (choice != 5);
                         break;
 
@@ -708,7 +732,7 @@ int main() {
                         break;
                     case 3:
                         calculateBill(tableNumber, "C:\\faculta\\PP\\game\\orders.txt");
-                        //removeItems(tableNumber, "C:\\faculta\\PP\\game\\orders.txt"); ASTA NU TREBUIE ca avem dupa un bug
+                        break;
                     case 4:
                         cout << "Returning to main menu..." << endl;
                         break;
@@ -717,19 +741,24 @@ int main() {
                         break;
                 }
 
-                if (choice == 4) break; // Exit the customer menu loop
+                if (choice == 4) {
+                    clearScreen();  // Clear screen before returning to the main menu
+                    break; // Exit the customer menu loop
+                }
             }
 
         } else if (choice == 2) {
             login("C:\\faculta\\PP\\game\\staff.txt");
+            clearScreen();  // Clear screen after staff login
         } else if (choice == 3) {
             cout << "Exiting the program. Goodbye!" << endl;
             break;
         } else {
             cout << "Invalid choice. Please try again." << endl;
         }
+
+        clearScreen();  // Clear screen before showing the main menu again
     }
 
     return 0;
 }
-
