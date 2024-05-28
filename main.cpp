@@ -482,7 +482,7 @@ double seeYourOrder(int tableNumber, const string& filename) {
         cerr << "Error: Unable to open file " << filename << endl;
         return 0.0;
     }
-    cout<<"Here is what you have ordered until now:"<<endl;
+
     string line;
     double totalPrice = 0.0;
     bool orderFound = false;
@@ -502,6 +502,7 @@ double seeYourOrder(int tableNumber, const string& filename) {
 
         if (currentTableNumber == tableNumber) {
             orderFound = true;
+            cout<<"Here is what you have ordered until now:"<<endl;
             cout << "Item: " << itemName << ", Quantity: " << quantity << ", Price: $" << price << endl;
             totalPrice += price;
         }
@@ -707,7 +708,7 @@ int main() {
                         break;
                     case 3:
                         calculateBill(tableNumber, "C:\\faculta\\PP\\game\\orders.txt");
-                        removeItems(tableNumber, "C:\\faculta\\PP\\game\\orders.txt");
+                        //removeItems(tableNumber, "C:\\faculta\\PP\\game\\orders.txt"); ASTA NU TREBUIE ca avem dupa un bug
                     case 4:
                         cout << "Returning to main menu..." << endl;
                         break;
