@@ -431,36 +431,34 @@ void displayOrders(const int table, const string& filename) {
     bool tableFound = false;
     while (getline(file, line)) {
         stringstream ss(line);
-        string tableNumStr, itemName, itemQuantity, itemTotalPrice, paidStr;
+        string tableNumStr, itemName, itemQuantity, itemTotalPrice;
         if (getline(ss, tableNumStr, ',') &&
             getline(ss, itemName, ',') &&
             getline(ss, itemQuantity, ',') &&
-            getline(ss, itemTotalPrice, ',') &&
-            getline(ss, paidStr, ',')) {
+            getline(ss, itemTotalPrice, ',')) {
             try {
                 double price = stod(itemTotalPrice);
                 int tableNum = stoi(tableNumStr);
                 if (tableNum == table) {
                     tableFound = true;
-                    cout << " Item: " << itemName << ", Quantity: " << itemQuantity << ", Price: " << itemTotalPrice << endl;
-                    s = s + price;
+                    cout << "Item: " << itemName << ", Quantity: " << itemQuantity << ", Price: " << itemTotalPrice << endl;
+                    s += price;
                 }
-            }
-            catch (const invalid_argument& e) {
+            } catch (const invalid_argument& e) {
                 cerr << "Error: Invalid table number format in file. Line skipped: " << line << endl;
-            }
-            catch (const out_of_range& e) {
+            } catch (const out_of_range& e) {
                 cerr << "Error: Table number out of range in file. Line skipped: " << line << endl;
             }
-        }
+            }
     }
     if (s > 0)
-        cout << " Total: " << s << endl;
+        cout << "Total: " << s << endl;
 
     if (!tableFound) {
         cout << "No orders found for table number: " << table << endl;
     }
 }
+
 
 //HELGA
 void displayAllOrders(const string& filename) {
