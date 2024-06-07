@@ -32,7 +32,7 @@ The Restaurant Management System is designed to manage restaurant operations eff
 ## Main Menu
 Upon starting the system, you will be presented with the main menu:
 ```plaintext
-Welcome to the Restaurant Management System!
+DineTech Main Page <3
 1. Customer
 2. Staff
 3. Exit
