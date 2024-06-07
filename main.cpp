@@ -652,7 +652,6 @@ double seeYourOrder(int tableNumber, const string& filename) {
 
             if (currentTableNumber == tableNumber) {
                 orderFound = true;
-                cout << "Here is what you have ordered until now:" << endl;
                 cout << "Item: " << itemName << ", Quantity: " << quantity << ", Price: $" << price << endl;
                 totalPrice += price;
             }
