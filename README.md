@@ -26,7 +26,7 @@ The Restaurant Management System is designed to manage restaurant operations eff
 
 4. Run the compiled executable:
     ```sh
-    ./restaurant_management_system
+    .\restaurant_system
     ```
 
 ## Main Menu
