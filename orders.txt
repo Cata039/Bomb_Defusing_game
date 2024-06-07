@@ -1,0 +1,5 @@
+2,Bruschetta,4,29.96
+150,Spinach Dip,3,29.97,0
+6,Caprese Salad,7,62.93,0
+6,Grilled Salmon,2,31.98,0
+6,Beef Steak,2,37.98,0

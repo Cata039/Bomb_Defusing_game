@@ -1,0 +1,4 @@
+Grilled Salmon,15.99,salmon, lemon, herbs
+Spaghetti Bolognese,12.49, gluten, beef, tomato, herbs
+Chicken Parmesan,14.99,chicken, tomatoes, dairy
+Beef Steak,18.99, beef, dairy
