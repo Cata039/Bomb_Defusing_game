@@ -21,7 +21,7 @@ The Restaurant Management System is designed to manage restaurant operations eff
 
 3. Compile the program using a C++ compiler:
     ```sh
-    g++ -o restaurant_management_system main.cpp
+    g++ main.cpp functions.cpp -o restaurant_system
     ```
 
 4. Run the compiled executable:
